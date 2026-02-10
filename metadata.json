@@ -1,0 +1,5 @@
+{
+  "name": "Portal de Notas de Serviço",
+  "description": "Um aplicativo web para gerenciar notas de serviço com dashboard, login e funcionalidade de modo escuro.",
+  "requestFramePermissions": []
+}
