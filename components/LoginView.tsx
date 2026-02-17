@@ -93,41 +93,41 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="min-h-screen flex bg-deep-navy overflow-hidden relative">
+        <div className="min-h-screen flex bg-[#f0f7ff] overflow-hidden relative">
             {/* Background elements - Design Apoio Pulse */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-blue/20 rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-deep-blue/30 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-blue/10 rounded-full blur-[120px] animate-pulse"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-deep-blue/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
 
             {/* Left Section: Brand info */}
-            <div className="hidden lg:flex w-5/12 relative flex-col justify-between p-16 z-10 border-r border-white/5">
+            <div className="hidden lg:flex w-5/12 relative flex-col justify-between p-16 z-10 border-r border-black/5">
                 <div className="flex items-center gap-4 animate-fade-in">
-                    <div className="w-12 h-12 bg-white flex items-center justify-center rounded-2xl shadow-xl">
-                        <span className="material-symbols-outlined text-deep-navy text-3xl font-black">shield</span>
+                    <div className="w-12 h-12 bg-deep-navy flex items-center justify-center rounded-2xl shadow-xl">
+                        <span className="material-symbols-outlined text-white text-3xl font-black">shield</span>
                     </div>
-                    <h1 className="text-white text-3xl font-black tracking-tighter uppercase italic">APOIO <span className="text-primary-blue not-italic">PORTAL</span></h1>
+                    <h1 className="text-deep-navy text-3xl font-black tracking-tighter uppercase italic">APOIO <span className="text-primary-blue not-italic">PORTAL</span></h1>
                 </div>
 
                 <div className="max-w-md animate-slide-up">
                     <div className="w-12 h-1 bg-primary-blue mb-8 rounded-full"></div>
-                    <h2 className="text-5xl font-black text-white mb-6 uppercase tracking-tighter leading-none">
+                    <h2 className="text-5xl font-black text-deep-navy mb-6 uppercase tracking-tighter leading-none">
                         Excelência em Gestão <span className="text-primary-blue italic">Corporativa.</span>
                     </h2>
-                    <p className="text-light-blue text-lg font-medium leading-relaxed opacity-80 uppercase tracking-widest text-[11px]">
+                    <p className="text-deep-blue/60 text-lg font-medium leading-relaxed uppercase tracking-widest text-[11px]">
                         Sua central de inteligência para documentos fiscais e automação de processos. Praticidade e segurança em um só lugar.
                     </p>
                 </div>
 
-                <div className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">
+                <div className="text-deep-navy/30 text-[10px] font-black uppercase tracking-[0.3em]">
                     © 2026 APOIO CORPORATIVO · NFSE INTELLIGENCE
                 </div>
             </div>
 
             {/* Right Section: Glass Form */}
-            <div className="flex-1 flex justify-center items-center p-8 z-10 bg-white/[0.02] backdrop-blur-sm">
+            <div className="flex-1 flex justify-center items-center p-8 z-10 bg-white/10 backdrop-blur-sm">
                 <div className="w-full max-w-md animate-fade-in">
-                    <div className="glass-card rounded-[2.5rem] p-10 border border-white/10 shadow-2xl">
+                    <div className="glass-card rounded-[2.5rem] p-10 border border-primary-blue/20 shadow-2xl">
                         <div className="mb-10">
-                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-2 italic">
+                            <h3 className="text-3xl font-black text-deep-navy uppercase tracking-tighter mb-2 italic">
                                 {isSignUp ? 'Criar Acesso' : 'Entrar Agora'}
                             </h3>
                             <p className="text-xs font-bold text-light-blue uppercase tracking-widest">
@@ -155,7 +155,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-light-blue uppercase tracking-widest ml-1" htmlFor="fullName">Nome Completo</label>
                                         <input
-                                            className="premium-input text-white text-sm"
+                                            className="premium-input text-deep-navy text-sm"
                                             id="fullName"
                                             placeholder="DIGITE SEU NOME"
                                             required
@@ -167,7 +167,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-light-blue uppercase tracking-widest ml-1" htmlFor="area">Área / Departamento</label>
                                         <input
-                                            className="premium-input text-white text-sm"
+                                            className="premium-input text-deep-navy text-sm"
                                             id="area"
                                             placeholder="EX: FINANCEIRO"
                                             required
@@ -182,7 +182,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-light-blue uppercase tracking-widest ml-1" htmlFor="email">E-mail Corporativo</label>
                                 <input
-                                    className="premium-input text-white text-sm"
+                                    className="premium-input text-deep-navy text-sm"
                                     id="email"
                                     placeholder="NOME@EMPRESA.COM.BR"
                                     required
@@ -202,7 +202,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                                     )}
                                 </div>
                                 <input
-                                    className="premium-input text-white text-sm"
+                                    className="premium-input text-deep-navy text-sm"
                                     id="password"
                                     placeholder="••••••••"
                                     required
@@ -240,7 +240,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
                     <div className="mt-8 flex items-center justify-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Ambiente Seguro · v2.6.0</span>
+                        <span className="text-[9px] font-black text-deep-navy/20 uppercase tracking-[0.3em]">Ambiente Seguro · v2.6.0</span>
                     </div>
                 </div>
             </div>
