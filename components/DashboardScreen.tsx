@@ -1,9 +1,9 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js/auto';
-import { DUMMY_NOTES, MONTHS, COMPANIES } from '../constants';
-import { NoteStatus } from '../types';
+import { MONTHS, supabase } from '../constants';
+import { ServiceNote, Company } from '../types';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -13,8 +13,55 @@ interface DashboardScreenProps {
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
-  const textColor = isDarkMode ? '#CBD5E1' : '#475569'; // slate-300 / slate-700
-  const gridColor = isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(203, 213, 225, 0.5)'; // slate-600/30 / slate-300/50
+  const [notes, setNotes] = useState<ServiceNote[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch all active notes
+      const { data: notesData, error: notesError } = await supabase
+        .from('service_notes')
+        .select(`
+          *,
+          companies:company_id (
+            id,
+            cnpj,
+            razao_social,
+            nome_fantasia
+          )
+        `)
+        .eq('status', 'active');
+
+      if (notesError) throw notesError;
+
+      // Fetch all active companies
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('status', 'active');
+
+      if (companiesError) throw companiesError;
+
+      setNotes(notesData || []);
+      setCompanies(companiesData || []);
+    } catch (err: any) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Erro ao carregar dados do dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const textColor = isDarkMode ? '#C1E8FF' : '#052659';
+  const gridColor = isDarkMode ? 'rgba(125, 160, 202, 0.1)' : 'rgba(5, 38, 89, 0.05)';
 
   const getChartOptions = (chartTitle: string) => ({
     responsive: true,
@@ -25,45 +72,36 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
         text: chartTitle,
         color: textColor,
         font: {
-          size: 16,
-          weight: 'bold',
-          family: 'Inter, sans-serif'
+          size: 14,
+          weight: 'bold' as const,
+          family: "'Inter', sans-serif"
         },
+        padding: { bottom: 20 }
       },
       legend: {
         labels: {
           color: textColor,
           font: {
-            family: 'Inter, sans-serif'
+            family: "'Inter', sans-serif",
+            weight: 'bold' as const,
+            size: 11
           }
         },
       },
-      tooltip: {
-        titleFont: { family: 'Inter, sans-serif' },
-        bodyFont: { family: 'Inter, sans-serif' }
-      }
     },
     scales: {
       x: {
-        grid: {
-          color: gridColor,
-        },
+        grid: { display: false },
         ticks: {
           color: textColor,
-          font: {
-            family: 'Inter, sans-serif'
-          }
+          font: { family: "'Inter', sans-serif", weight: 'normal' as const }
         },
       },
       y: {
-        grid: {
-          color: gridColor,
-        },
+        grid: { color: gridColor },
         ticks: {
           color: textColor,
-          font: {
-            family: 'Inter, sans-serif'
-          }
+          font: { family: "'Inter', sans-serif", weight: 'normal' as const }
         },
         beginAtZero: true,
       },
@@ -71,25 +109,26 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
   });
 
   const pieChartOptions = {
-    ...getChartOptions(""), // No main title for Pie, as it's typically in the card header
+    ...getChartOptions(""),
     scales: {
-      x: {
-        display: false, // Hide x-axis for pie chart
-      },
-      y: {
-        display: false, // Hide y-axis for pie chart
-      },
+      x: { display: false },
+      y: { display: false },
     },
   };
 
-  // Data for "Notas por Mês"
+  // Data for "Notas por Mês" (Current Year)
   const notesByMonthData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const counts: { [key: number]: number } = {};
-    MONTHS.forEach(month => (counts[month.id] = 0)); // Initialize all months
-    DUMMY_NOTES.forEach(note => {
-      const month = parseInt(note.date.substring(3, 5));
-      if (counts[month] !== undefined) {
-        counts[month]++;
+    MONTHS.forEach(month => (counts[month.id] = 0));
+
+    notes.forEach(note => {
+      const noteDate = new Date(note.data_emissao);
+      if (noteDate.getFullYear() === currentYear) {
+        const month = noteDate.getMonth() + 1;
+        if (counts[month] !== undefined) {
+          counts[month]++;
+        }
       }
     });
 
@@ -97,123 +136,163 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
       labels: MONTHS.map(month => month.name),
       datasets: [
         {
-          label: 'Número de Notas',
+          label: `Notas em ${currentYear}`,
           data: MONTHS.map(month => counts[month.id]),
-          backgroundColor: isDarkMode ? '#60A5FA' : '#4a5585', // blue-400 / primary
-          borderColor: isDarkMode ? '#3B82F6' : '#3d457a',
-          borderWidth: 1,
-          borderRadius: 4,
-          hoverBackgroundColor: isDarkMode ? '#3B82F6' : '#3d457a',
+          backgroundColor: '#5483B3',
+          borderColor: '#052659',
+          borderWidth: 0,
+          borderRadius: 8,
+          hoverBackgroundColor: '#052659',
         },
       ],
     };
-  }, [isDarkMode]);
+  }, [notes]);
 
   // Data for "Notas por Status"
   const notesByStatusData = useMemo(() => {
-    const counts = {
-      [NoteStatus.PROCESSED]: 0,
-      [NoteStatus.PENDING]: 0,
-      [NoteStatus.ERROR]: 0,
-    };
-    DUMMY_NOTES.forEach(note => {
-      counts[note.status]++;
-    });
+    const syncedCount = notes.filter(n => n.sync_status === 'synced').length;
+    const pendingCount = notes.filter(n => n.sync_status === 'pending' || !n.sync_status).length;
+    const errorCount = notes.filter(n => n.sync_status === 'error').length;
 
     const backgroundColors = [
-      isDarkMode ? '#34D399' : '#10B981', // green-400 / emerald-500
-      isDarkMode ? '#60A5FA' : '#3B82F6', // blue-400 / blue-500
-      isDarkMode ? '#F87171' : '#EF4444', // red-400 / red-500
-    ];
-
-    const borderColors = [
-      isDarkMode ? '#10B981' : '#059669', // green-500 / emerald-600
-      isDarkMode ? '#3B82F6' : '#2563EB', // blue-500 / blue-600
-      isDarkMode ? '#EF4444' : '#DC2626', // red-500 / red-600
+      '#10B981', // green (synced)
+      '#5483B3', // primary (pending)
+      '#EF4444', // red (error)
     ];
 
     return {
-      labels: Object.values(NoteStatus),
+      labels: ['SINCRONIZADAS', 'PENDENTES', 'ERRO'],
       datasets: [
         {
-          label: 'Notas por Status',
-          data: Object.values(counts),
+          data: [syncedCount, pendingCount, errorCount],
           backgroundColor: backgroundColors,
-          borderColor: borderColors,
-          borderWidth: 1,
+          borderWidth: 0,
+          hoverOffset: 15
         },
       ],
     };
-  }, [isDarkMode]);
+  }, [notes]);
 
   // Data for "Notas por Empresa"
   const notesByCompanyData = useMemo(() => {
-    const companyNames = COMPANIES.filter(c => c.id !== '1').map(c => c.name); // Excluir 'Selecione a Empresa'
     const counts: { [key: string]: number } = {};
-    companyNames.forEach(name => (counts[name] = 0));
+    companies.forEach(c => (counts[c.id] = 0));
 
-    DUMMY_NOTES.forEach(note => {
-      if (counts[note.company] !== undefined) {
-        counts[note.company]++;
+    notes.forEach(note => {
+      if (note.company_id && counts[note.company_id] !== undefined) {
+        counts[note.company_id]++;
       }
     });
 
+    const sortedCompanies = [...companies]
+      .map(c => ({ ...c, count: counts[c.id] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     const dynamicColors = [
-      isDarkMode ? '#60A5FA' : '#4a5585', // primary/blue
-      isDarkMode ? '#34D399' : '#10B981', // green
-      isDarkMode ? '#FBBF24' : '#F59E0B', // amber
-      isDarkMode ? '#A78BFA' : '#8B5CF6', // violet
-      isDarkMode ? '#EC4899' : '#E6498A', // pink
+      '#052659',
+      '#5483B3',
+      '#7DA0CA',
+      '#C1E8FF',
+      '#f59e0b',
     ];
 
     return {
-      labels: companyNames,
+      labels: sortedCompanies.map(c => c.nome_fantasia || c.razao_social || 'Empresa'),
       datasets: [
         {
           label: 'Número de Notas',
-          data: companyNames.map(name => counts[name]),
-          backgroundColor: dynamicColors.slice(0, companyNames.length), // Use subset of colors if fewer companies
-          borderColor: dynamicColors.map(color => color.replace('A5FA', '82F6').replace('D399', 'B981').replace('BF24', 'A057').replace('8BFA', '5CF6').replace('4899', '2D7B')), // Darken border slightly
-          borderWidth: 1,
-          borderRadius: 4,
-          hoverBackgroundColor: dynamicColors.map(color => color.replace('A5FA', '82F6').replace('D399', 'B981').replace('BF24', 'A057').replace('8BFA', '5CF6').replace('4899', '2D7B')),
+          data: sortedCompanies.map(c => c.count),
+          backgroundColor: dynamicColors,
+          borderWidth: 0,
+          borderRadius: 8,
         },
       ],
     };
-  }, [isDarkMode]);
+  }, [notes, companies]);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl text-red-600 dark:text-red-400 glass-card">
+        <p className="font-bold">{error}</p>
+        <button onClick={fetchDashboardData} className="mt-2 text-sm font-black underline uppercase tracking-widest">Tentar novamente</button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <h1 className="text-lg font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-6">
-        Dashboard Analítico
-      </h1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Card: Notas por Mês */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col transition-colors">
-          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Notas por Mês</h2>
-          <div className="flex-1 min-h-[250px]">
-            <Bar data={notesByMonthData} options={getChartOptions("Notas por Mês")} />
-          </div>
+    <div className="animate-fade-in p-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-deep-navy dark:text-white tracking-tighter uppercase">
+            Visão Geral
+          </h1>
+          <p className="text-sm font-medium text-light-blue uppercase tracking-[0.2em] mt-1">
+            Inteligência de documentos fiscais
+          </p>
         </div>
-
-        {/* Card: Notas por Status */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col transition-colors">
-          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Notas por Status</h2>
-          <div className="flex-1 min-h-[250px] flex items-center justify-center">
-            <Pie data={notesByStatusData} options={pieChartOptions} />
+        <div className="flex items-center gap-6 px-8 py-4 glass-card rounded-3xl shadow-premium">
+          <div className="text-center">
+            <div className="text-[10px] font-black text-light-blue uppercase tracking-widest mb-1">Total de Notas</div>
+            <div className="text-3xl font-black text-deep-navy dark:text-ice-blue">{notes.length}</div>
           </div>
-        </div>
-
-        {/* Card: Notas por Empresa */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col transition-colors">
-          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Notas por Empresa</h2>
-          <div className="flex-1 min-h-[250px]">
-            <Bar data={notesByCompanyData} options={getChartOptions("Notas por Empresa")} />
+          <div className="w-px h-10 bg-light-blue/20"></div>
+          <div className="text-center">
+            <div className="text-[10px] font-black text-light-blue uppercase tracking-widest mb-1">Empresas</div>
+            <div className="text-3xl font-black text-deep-navy dark:text-ice-blue">{companies.length}</div>
           </div>
         </div>
       </div>
-    </>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 glass-card rounded-[2rem] p-10 animate-slide-up shadow-premium">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-black text-deep-navy dark:text-white uppercase tracking-tight">Fluxo de Emissões</h2>
+            <div className="p-3 bg-ice-blue/30 rounded-2xl">
+              <span className="material-symbols-outlined text-primary">trending_up</span>
+            </div>
+          </div>
+          <div className="h-[400px]">
+            <Bar data={notesByMonthData} options={getChartOptions("Volume Mensal")} />
+          </div>
+        </div>
+
+        <div className="lg:col-span-4 glass-card rounded-[2rem] p-10 animate-slide-up shadow-premium" style={{ animationDelay: '0.1s' }}>
+          <h2 className="text-xl font-black text-deep-navy dark:text-white uppercase tracking-tight mb-8">Integridade</h2>
+          <div className="h-[250px] flex items-center justify-center">
+            <Pie data={notesByStatusData} options={pieChartOptions} />
+          </div>
+          <div className="mt-10 space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Sincronizadas</span>
+              <span className="text-xl font-black text-emerald-700">{notes.filter(n => n.sync_status === 'synced').length}</span>
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/10">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Pendentes</span>
+              <span className="text-xl font-black text-primary">{notes.filter(n => n.sync_status === 'pending' || !n.sync_status).length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-12 glass-card rounded-[2rem] p-10 animate-slide-up shadow-premium" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-black text-deep-navy dark:text-white uppercase tracking-tight">Top Performance por Cliente</h2>
+            <button className="px-6 py-2 bg-primary/10 text-primary text-xs font-black rounded-xl uppercase hover:bg-primary hover:text-white transition-all">Relatório Completo</button>
+          </div>
+          <div className="h-[350px]">
+            <Bar data={notesByCompanyData} options={getChartOptions("Ranking de Notas")} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

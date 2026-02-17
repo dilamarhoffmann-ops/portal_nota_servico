@@ -1,0 +1,147 @@
+[dotenv@17.2.4] injecting env (7) from scripts\.env -- tip: ­ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+{
+  "emitente": {
+    "tipo": 1,
+    "codigoCidade": 5300108
+  },
+  "rps": {
+    "dataEmissaoTz": -3,
+    "dataVencimentoTz": -3,
+    "competenciaTz": -3,
+    "tipo": "1",
+    "dataEmissao": "2023-10-12T10:36:03.000Z",
+    "competencia": "2023-10-12T03:00:00.000Z",
+    "numero": 28,
+    "serie": "900",
+    "dataVencimento": "2026-02-10T20:23:53.693Z"
+  },
+  "dps": {
+    "id": "DPS530010825250089500012700900000000000000028",
+    "numero": 28,
+    "serie": "900"
+  },
+  "camposExtras": {
+    "copiasEmail": []
+  },
+  "prestador": {
+    "telefone": {
+      "numero": "6198623876"
+    },
+    "config": {
+      "rps": {
+        "numero": 1,
+        "lote": 1,
+        "numeracao": []
+      },
+      "email": {
+        "envio": false
+      },
+      "producao": true,
+      "integracoes": []
+    },
+    "incentivadorCultural": false,
+    "incentivoFiscal": false,
+    "cpfCnpj": "52500895000127",
+    "email": "GRACIELYFSA@GMAIL.COM",
+    "simplesNacional": true,
+    "regimeTributarioEspecial": 0,
+    "razaoSocial": "52.500.895 GRACIELY SOARES DA SILVA",
+    "endereco": {
+      "codigoCidade": "5300108",
+      "cep": "71691141",
+      "logradouro": "34",
+      "numero": "02",
+      "bairro": "SETOR TRADICIONAL (SAO SEBASTIAO)",
+      "codigoPais": "1058",
+      "descricaoPais": "Brasil"
+    }
+  },
+  "tomador": {
+    "cpfCnpj": "25249058000102",
+    "razaoSocial": "APOIO SERVICOS ADMINISTRATIVOS LAGO SUL LTDA",
+    "endereco": {
+      "codigoCidade": "5300108",
+      "cep": "71660060",
+      "logradouro": "SHIS QI 23 CONJUNTO",
+      "numero": "6",
+      "complemento": "LOTE  13",
+      "bairro": "SETOR DE HABITACOES INDIVIDUAIS SUL",
+      "codigoPais": "1058",
+      "descricaoPais": "Brasil"
+    }
+  },
+  "pdf": {
+    "interacoes": {
+      "dataUltima": "2026-02-04T19:07:04.835Z"
+    },
+    "filename": "25249058000102/2026/02/04/24520104107206440500615_CONCLUIDO.pdf"
+  },
+  "xml": {
+    "interacoes": {
+      "dataUltima": "2026-02-04T19:07:04.835Z"
+    },
+    "filename": "xmls/2023/10/25249058000102/53001082252500895000127000000000000123108022265841/2026-02-04T19-07-04.801Z_nfse.xml"
+  },
+  "retorno": {
+    "dataAutorizacao": "2023-10-12T10:36:03.000Z",
+    "numeroNfse": "1",
+    "situacao": "AUTORIZADA"
+  },
+  "cidadePrestacao": {
+    "utilizarDadosTomador": false,
+    "codigo": "5300108",
+    "descricao": "Bras├¡lia"
+  },
+  "dfe": {
+    "tipoAtor": "tomador",
+    "nsu": 12
+  },
+  "tentativasReenvio": 0,
+  "enviarEmail": false,
+  "envioPrioritario": false,
+  "notaRepasse": false,
+  "chaveAcessoNfse": "53001082252500895000127000000000000123108022265841",
+  "concludedAt": "2026-02-04T19:07:02.090Z",
+  "informacoesComplementares": "Atividades de Cobran├ºa e Informa├º├Áes Cadastrais - Referencia 09/2023",
+  "protocol": "6c5dfdd9-983d-4426-866a-d5586ea42209",
+  "status": "CONCLUIDO",
+  "substituicao": false,
+  "tomada": true,
+  "servico": [
+    {
+      "iss": {
+        "tipoRetencao": 1,
+        "exigibilidade": 1,
+        "tipoTributacao": 1,
+        "retido": false,
+        "valorRetido": 0
+      },
+      "valor": {
+        "servico": 2500,
+        "liquido": 2500
+      },
+      "retencao": {
+        "pis": {
+          "retido": false
+        },
+        "cofins": {
+          "retido": false
+        }
+      },
+      "tributosFederaisRetidos": true,
+      "_id": "698b93d9fe9cffc3f90e0d9f",
+      "codigo": "172201",
+      "discriminacao": "Atividades de Cobran├ºa e Informa├º├Áes Cadastrais"
+    }
+  ],
+  "deducao": [],
+  "logs": [],
+  "cce": [],
+  "email": [],
+  "webhook": [],
+  "parcelas": [],
+  "eventosNfse": [],
+  "despesas": [],
+  "id": "698398d618afd500125bfb51",
+  "numeroNfse": "1"
+}

@@ -1,5 +1,12 @@
 
-import { Company, Note, NoteStatus } from './types';
+import { Company } from './types';
+import { createClient } from '@supabase/supabase-js';
+
+// Configuração do Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const COMPANIES: Company[] = [
   { id: '1', name: 'Selecione a Empresa' },
@@ -25,75 +32,75 @@ export const MONTHS: { id: number; name: string }[] = [
   { id: 12, name: 'Dezembro' },
 ];
 
-export const DUMMY_NOTES: Note[] = [
+export const DUMMY_NOTES: any[] = [
   {
     id: 1,
     number: '6357',
     company: 'RODOTRUCK - RIO PRETO',
     date: '08/02/2026',
-    status: NoteStatus.PROCESSED,
+    status: 'PROCESSED',
   },
   {
     id: 2,
     number: '6358',
     company: 'LOGÍSTICA INTEGRADA S.A.',
     date: '09/02/2026',
-    status: NoteStatus.PENDING,
+    status: 'PENDING',
   },
   {
     id: 3,
     number: '6359',
     company: 'RODOTRUCK - RIO PRETO',
     date: '09/02/2026',
-    status: NoteStatus.ERROR,
+    status: 'ERROR',
   },
   {
     id: 4,
     number: '6360',
     company: 'TRANSPORTES RÁPIDOS LTDA',
     date: '10/02/2026',
-    status: NoteStatus.PROCESSED,
+    status: 'PROCESSED',
   },
   {
     id: 5,
     number: '6361',
     company: 'LOGÍSTICA INTEGRADA S.A.',
     date: '11/02/2026',
-    status: NoteStatus.PENDING,
+    status: 'PENDING',
   },
   {
     id: 6,
     number: '6362',
     company: 'RODOTRUCK - RIO PRETO',
     date: '12/02/2026',
-    status: NoteStatus.ERROR,
+    status: 'ERROR',
   },
   {
     id: 7,
     number: '6363',
     company: 'TRANSPORTES RÁPIDOS LTDA',
     date: '13/02/2026',
-    status: NoteStatus.PROCESSED,
+    status: 'PROCESSED',
   },
   {
     id: 8,
     number: '6364',
     company: 'LOGÍSTICA INTEGRADA S.A.',
     date: '14/02/2026',
-    status: NoteStatus.PENDING,
+    status: 'PENDING',
   },
   {
     id: 9,
     number: '6365',
     company: 'RODOTRUCK - RIO PRETO',
     date: '15/02/2026',
-    status: NoteStatus.ERROR,
+    status: 'ERROR',
   },
   {
     id: 10,
     number: '6366',
     company: 'TRANSPORTES RÁPIDOS LTDA',
     date: '16/02/2026',
-    status: NoteStatus.PROCESSED,
+    status: 'PROCESSED',
   },
 ];

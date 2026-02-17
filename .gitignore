@@ -22,3 +22,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AI Automation
+.agent/
+.temp_ag_kit/
+
+# Temp and logs
+*.txt
+*.log
+saida.txt
+url_output.txt
+verify_output.txt
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Utility scripts
+utils_scripts/
+
+
+.vercel

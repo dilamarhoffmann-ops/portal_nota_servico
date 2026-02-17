@@ -1,25 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Portal de Notas de Serviço</title>
+
+    <!-- Security Headers (Meta-tag versions) -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://fonts.googleapis.com https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        primary: "#4a5585", // Standardized primary color from dashboard
-                        "background-light": "#f3f4f6",
-                        "background-dark": "#0f172a",
-                        "sidebar-light": "#4a5585",
-                        "sidebar-dark": "#1e293b",
-                        "card-dark": "#1e293b", // Used for login card in dark mode
+                        primary: "#5483B3",
+                        "deep-navy": "#021024",
+                        "deep-blue": "#052659",
+                        "light-blue": "#7DA0CA",
+                        "ice-blue": "#C1E8FF",
+                        "accent-orange": "#f59e0b",
+                        "background-light": "#f0f7ff",
+                        "background-dark": "#021024",
                     },
                     fontFamily: {
                         sans: ["Inter", "sans-serif"],
@@ -29,6 +40,7 @@
                         'lg': "0.75rem",
                         'xl': "1rem",
                         '2xl': "1.5rem",
+                        '3xl': "2rem",
                     },
                 },
             },
@@ -58,7 +70,7 @@
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
         }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
@@ -71,10 +83,13 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200">
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200">
     <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
