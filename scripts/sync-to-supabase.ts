@@ -140,6 +140,9 @@ async function registrarNotaNoSupabase(nota: any, cnpjAlvo: string, s3Paths: { p
             return `https://api.plugnotas.com.br/nfse/${typeStr}/${notaId}`;
         };
 
+        const cnpjPrestadorVal = formatCNPJ(typeof nota.prestador === 'object' ? nota.prestador?.cpfCnpj : String(nota.prestador));
+        const numeroVal = String(nota.numeroNfse || nota.numero || notaId);
+
         const data = {
             nota_id: notaId,
             id_dps: nota.idDPS,
@@ -149,7 +152,7 @@ async function registrarNotaNoSupabase(nota: any, cnpjAlvo: string, s3Paths: { p
             chave_acesso_nfse: nota.chaveAcessoNfse,
             serie: nota.serie,
             numero: String(nota.numero || ""),
-            numero_nfse: String(nota.numeroNfse || nota.numero || notaId),
+            numero_nfse: numeroVal,
             autorizacao: parseDate(nota.autorizacao),
             valor_total: nota.valorServico ||
                 (nota.valor && typeof nota.valor === 'object' && 'servico' in nota.valor ? (nota.valor as any).servico : 0) ||
@@ -157,7 +160,7 @@ async function registrarNotaNoSupabase(nota: any, cnpjAlvo: string, s3Paths: { p
                 (typeof nota.valor === 'number' ? nota.valor : 0),
             company_id: companyId,
             cnpj_tomador: formatCNPJ(cnpjAlvo),
-            cnpj_prestador: formatCNPJ(typeof nota.prestador === 'object' ? nota.prestador?.cpfCnpj : String(nota.prestador)),
+            cnpj_prestador: cnpjPrestadorVal,
             data_emissao: dataIso,
             ano: dataConv.getFullYear(),
             mes: dataConv.getMonth() + 1,
@@ -171,8 +174,32 @@ async function registrarNotaNoSupabase(nota: any, cnpjAlvo: string, s3Paths: { p
             status: "active"
         };
 
-        const { error } = await supabase.from('service_notes').upsert(data, { onConflict: 'nota_id' });
-        if (error) throw error;
+        // 1. Tentar atualizar pelo ID oficial (Upsert padrão)
+        const { data: existingById } = await supabase.from('service_notes').select('id').eq('nota_id', notaId).maybeSingle();
+
+        if (existingById) {
+            const { error } = await supabase.from('service_notes').update(data).eq('id', existingById.id);
+            if (error) throw error;
+        } else {
+            // 2. Tentar encontrar por chave semântica (evitar duplicidade com script Python)
+            const { data: existingByContent } = await supabase.from('service_notes')
+                .select('id')
+                .eq('numero_nfse', numeroVal)
+                .eq('cnpj_prestador', cnpjPrestadorVal)
+                .maybeSingle();
+
+            if (existingByContent) {
+                // Atualiza o registro existente (substituindo o ID autogerado pelo oficial)
+                const { error } = await supabase.from('service_notes').update(data).eq('id', existingByContent.id);
+                if (error) throw error;
+                console.log(`      [Duplicate Prevented] Nota ID atualizado para ${numeroVal}`);
+            } else {
+                // Inserção nova
+                const { error } = await supabase.from('service_notes').insert(data);
+                if (error) throw error;
+            }
+        }
+
         return true;
     } catch (e: any) {
         console.error(`      [Erro] Registro Supabase: ${e.message || e}`);
@@ -195,7 +222,7 @@ async function syncPeriodo(cnpjFormatado: string, companyId: string, ano: number
 
     while (true) {
 
-,        const params: any = { dataInicial: dataIni, dataFinal: dataFim, ator: 2, quantidade: 50 };
+        const params: any = { dataInicial: dataIni, dataFinal: dataFim, ator: 2, quantidade: 50 };
         if (hashPagina) params.hashProximaPagina = hashPagina;
 
         try {

@@ -1,12 +1,9 @@
 
 import { Company } from './types';
-import { createClient } from '@supabase/supabase-js';
+import supabaseClient from './src/lib/supabase';
 
-// Configuração do Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Exporta a instância única do cliente Supabase
+export const supabase = supabaseClient;
 
 export const COMPANIES: Company[] = [
   { id: '1', name: 'Selecione a Empresa' },

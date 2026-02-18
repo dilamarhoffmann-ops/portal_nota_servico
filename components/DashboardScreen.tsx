@@ -4,6 +4,8 @@ import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js/auto';
 import { MONTHS, supabase } from '../constants';
 import { ServiceNote, Company } from '../types';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -58,6 +60,76 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateReport = () => {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(18);
+    doc.text('Relatório Analítico de Notas Fiscais', 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+    // Grouping Data: Company -> Month -> Count
+    const groups: { [key: string]: { name: string; cnpj: string; month: string; rawMonth: string; count: number } } = {};
+
+    notes.forEach(note => {
+      // Identify Company Name
+      let companyName = 'Desconhecida';
+      let companyCnpj = note.cnpj_tomador || 'N/A';
+
+      if (note.companies) {
+        // @ts-ignore - Supabase join returns single object or array depending on query, here it's single object
+        companyName = note.companies.nome_fantasia || note.companies.razao_social || companyName;
+        // @ts-ignore
+        companyCnpj = note.companies.cnpj || companyCnpj;
+      }
+
+      // Format Month
+      const date = new Date(note.data_emissao);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM for sorting
+      const monthLabel = date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+      const key = `${companyCnpj}-${monthKey}`;
+
+      if (!groups[key]) {
+        groups[key] = {
+          name: companyName,
+          cnpj: companyCnpj,
+          month: monthLabel,
+          rawMonth: monthKey,
+          count: 0
+        };
+      }
+      groups[key].count++;
+    });
+
+    // Convert to Array and Sort
+    const tableData = Object.values(groups)
+      .sort((a, b) => {
+        // Sort by Month (Ascending) then Name
+        if (a.rawMonth !== b.rawMonth) return a.rawMonth.localeCompare(b.rawMonth);
+        return a.name.localeCompare(b.name);
+      })
+      .map(item => [
+        item.name.toUpperCase(),
+        item.cnpj,
+        item.month.toUpperCase(),
+        item.count
+      ]);
+
+    // Generate Table
+    autoTable(doc, {
+      head: [['Empresa (Tomador)', 'CNPJ', 'Mês de Referência', 'Qtd. Notas']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [5, 38, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 247, 255] },
+    });
+
+    doc.save('relatorio_completo_notas.pdf');
   };
 
   const textColor = isDarkMode ? '#C1E8FF' : '#052659';
@@ -285,7 +357,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ isDarkMode }) => {
         <div className="lg:col-span-12 glass-card rounded-[2rem] p-10 animate-slide-up shadow-premium" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-black text-deep-navy dark:text-white uppercase tracking-tight">Top Performance por Cliente</h2>
-            <button className="px-6 py-2 bg-primary/10 text-primary text-xs font-black rounded-xl uppercase hover:bg-primary hover:text-white transition-all">Relatório Completo</button>
+            <button
+              onClick={handleGenerateReport}
+              className="px-6 py-2 bg-primary/10 text-primary text-xs font-black rounded-xl uppercase hover:bg-primary hover:text-white transition-all cursor-pointer"
+            >
+              Relatório Completo
+            </button>
           </div>
           <div className="h-[350px]">
             <Bar data={notesByCompanyData} options={getChartOptions("Ranking de Notas")} />

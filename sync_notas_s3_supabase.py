@@ -3,7 +3,7 @@ Script para sincronizar notas fiscais do S3 para o Supabase.
 Busca todas as notas no bucket S3 e registra no banco de dados.
 """
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 import os
 import sys
@@ -170,26 +170,56 @@ def group_files_by_nota(files: List[str]) -> Dict[str, Dict]:
     return notas
 
 
+
+def format_cnpj(cnpj: str) -> str:
+    """Formata CNPJ para o padrão XX.XXX.XXX/XXXX-XX"""
+    if not cnpj or len(cnpj) != 14:
+        return cnpj
+    return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+
 def sync_nota_to_supabase(nota_data: Dict) -> bool:
     """Insere ou atualiza uma nota no Supabase."""
     try:
+        # Formatar CNPJs para garantir consistência com o script TS
+        cnpj_tomador_raw = nota_data['cnpj_tomador']
+        cnpj_prestador_raw = nota_data['cnpj_prestador']
+        
+        cnpj_tomador_fmt = format_cnpj(cnpj_tomador_raw)
+        cnpj_prestador_fmt = format_cnpj(cnpj_prestador_raw)
+        
         # Buscar company_id
-        company_id = get_company_id_by_cnpj(nota_data['cnpj_tomador'])
+        company_id = get_company_id_by_cnpj(cnpj_tomador_fmt) or get_company_id_by_cnpj(cnpj_tomador_raw)
         
         # Gerar URLs de download (válidas por 24 horas)
         download_url_pdf = generate_s3_presigned_url(nota_data['s3_path_pdf'], 86400) if nota_data['s3_path_pdf'] else None
         download_url_xml = generate_s3_presigned_url(nota_data['s3_path_xml'], 86400) if nota_data['s3_path_xml'] else None
         
-        # Nota ID: usar numero_nfse + cnpj_prestador como ID único
-        nota_id = f"{nota_data['numero_nfse']}_{nota_data['cnpj_prestador']}"
+        # Tentar encontrar a nota existente pelo Número + CNPJs (evitar duplicidade com IDs diferentes)
+        existing = supabase.table('service_notes')\
+            .select('id, nota_id')\
+            .eq('numero_nfse', str(nota_data['numero_nfse']))\
+            .or_(f"cnpj_prestador.eq.{cnpj_prestador_fmt},cnpj_prestador.eq.{cnpj_prestador_raw}")\
+            .execute()
+            
+        # Determinar nota_id
+        if existing.data and len(existing.data) > 0:
+            # Já existe, usar o ID existente (pode ser UUID do PlugNotas ou formato antigo)
+            nota_id = existing.data[0]['nota_id']
+            record_id = existing.data[0]['id']
+            is_update = True
+        else:
+            # Não existe, gerar ID padronizado (fallback)
+            nota_id = f"{nota_data['numero_nfse']}_{cnpj_prestador_raw}"
+            record_id = None
+            is_update = False
         
         # Dados para inserir/atualizar
         record = {
             'nota_id': nota_id,
-            'numero_nfse': nota_data['numero_nfse'],
+            'numero_nfse': str(nota_data['numero_nfse']),
             'company_id': company_id,
-            'cnpj_tomador': nota_data['cnpj_tomador'],
-            'cnpj_prestador': nota_data['cnpj_prestador'],
+            'cnpj_tomador': cnpj_tomador_fmt,
+            'cnpj_prestador': cnpj_prestador_fmt,
             'data_emissao': nota_data['data_emissao'],
             'ano': nota_data['ano'],
             'mes': nota_data['mes'],
@@ -203,24 +233,17 @@ def sync_nota_to_supabase(nota_data: Dict) -> bool:
             'status': 'active'
         }
         
-        # Verificar se a nota já existe
-        existing = supabase.table('service_notes')\
-            .select('id')\
-            .eq('nota_id', nota_id)\
-            .eq('cnpj_tomador', nota_data['cnpj_tomador'])\
-            .execute()
-        
-        if existing.data and len(existing.data) > 0:
+        if is_update:
             # Atualizar registro existente
             result = supabase.table('service_notes')\
                 .update(record)\
-                .eq('id', existing.data[0]['id'])\
+                .eq('id', record_id)\
                 .execute()
-            print(f"  ✅ Atualizada: NFS-e {nota_data['numero_nfse']} - {nota_data['data_emissao']}")
+            print(f"  ✅ Atualizada: NFS-e {nota_data['numero_nfse']} - {nota_data['data_emissao']} (ID: {nota_id})")
         else:
             # Inserir novo registro
             result = supabase.table('service_notes').insert(record).execute()
-            print(f"  ✅ Inserida: NFS-e {nota_data['numero_nfse']} - {nota_data['data_emissao']}")
+            print(f"  ✅ Inserida: NFS-e {nota_data['numero_nfse']} - {nota_data['data_emissao']} (Novo ID)")
         
         return True
         
@@ -229,8 +252,34 @@ def sync_nota_to_supabase(nota_data: Dict) -> bool:
         return False
 
 
+
+
+def registrar_log(inicio: datetime, sucesso: int, total: int, erros: int):
+    """Registra a execução na tabela sync_logs para refletir no frontend."""
+    try:
+        agora = datetime.now(timezone.utc)
+        
+        log_data = {
+            'started_at': inicio.isoformat(),
+            'finished_at': agora.isoformat(),
+            'status': 'completed',
+            'notes_found': total,
+            'notes_synced': sucesso,
+            'error_message': f"Erros: {erros}" if erros > 0 else None,
+            'metadata': {'source': 'python_s3_script'}
+        }
+        
+        supabase.table('sync_logs').insert(log_data).execute()
+        print("✅ Log de sincronização registrado no banco de dados.")
+        
+    except Exception as e:
+        print(f"⚠️ Erro ao registrar log no Supabase: {e}")
+
+
 def main():
     """Função principal."""
+    inicio_sync = datetime.now(timezone.utc)
+    
     print("=" * 80)
     print("🚀 SINCRONIZAÇÃO DE NOTAS FISCAIS: S3 → SUPABASE")
     print("=" * 80)
@@ -266,6 +315,9 @@ def main():
     print(f"❌ Erros durante a sincronização: {error_count}")
     print(f"📊 Total processado: {len(notas)}")
     print("=" * 80)
+    
+    # 5. Registrar log de sincronização
+    registrar_log(inicio_sync, success_count, len(notas), error_count)
 
 
 if __name__ == "__main__":
